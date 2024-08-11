@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPu
 from PyQt5.QtCore import Qt, QAbstractTableModel
 
 # Load and clean data
-data = pd.read_csv('~/Documents/movies/movies.csv')
+data = pd.read_csv('~/movies_analysis/movies.csv')
 data.drop_duplicates(inplace=True)
 data.dropna(inplace=True)
 

@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPu
 from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex
 import random
 
-data = pd.read_csv('~/Documents/movies/movies.csv')
+data = pd.read_csv('~/movies_analysis/movies.csv')
 data.drop_duplicates(inplace=True)
 data.dropna(inplace=True)
 
@@ -63,33 +63,8 @@ class App(QMainWindow):
         super().__init__()
         self.setWindowTitle("Movies Analysis")
         #self.setGeometry(150, 150, 1200, 800)
-        # Set the stylesheet
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #f0f0f0;
-            }
-            QPushButton {
-                background-color: #5e0000;
-                color: white;
-                border-radius: 5px;
-                padding: 10px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #b30000;
-            }
-            QTableView {
-                border: 1px solid #ddd;
-                background-color: white;
-            }
-            QLabel {
-                font-weight: bold;
-            }
-        """)
 
-
-
-        # creating a central widget and layout
+# creating a central widget and layout
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.layout = QVBoxLayout(self.central_widget)
@@ -139,19 +114,6 @@ class App(QMainWindow):
         self.figure, self.ax = plt.subplots()
         self.canvas = FigureCanvas(self.figure)
         self.layout.addWidget(self.canvas)
-        self.table_view.setStyleSheet("""
-            QTableView {
-                gridline-color: #ddd;
-                selection-background-color: #5e0000;
-                selection-color: white;
-            }
-            QHeaderView::section {
-                background-color: #5e0000;
-                color: white;
-                padding: 5px;
-                border: 1px solid #ddd;
-            }
-        """)
         self.central_widget.setLayout(self.layout)
         self.button_layout.setSpacing(10)
         self.button_layout.setContentsMargins(10, 10, 10, 10)
@@ -419,5 +381,6 @@ if __name__ == "__main__":
     window = App()
     window.show()
     sys.exit(app.exec_())
+
 
 
