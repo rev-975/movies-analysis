@@ -63,33 +63,8 @@ class App(QMainWindow):
         super().__init__()
         self.setWindowTitle("Movies Analysis")
         #self.setGeometry(150, 150, 1200, 800)
-        # Set the stylesheet
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #f0f0f0;
-            }
-            QPushButton {
-                background-color: #5e0000;
-                color: white;
-                border-radius: 5px;
-                padding: 10px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #b30000;
-            }
-            QTableView {
-                border: 1px solid #ddd;
-                background-color: white;
-            }
-            QLabel {
-                font-weight: bold;
-            }
-        """)
 
-
-
-        # creating a central widget and layout
+# creating a central widget and layout
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.layout = QVBoxLayout(self.central_widget)
@@ -139,19 +114,6 @@ class App(QMainWindow):
         self.figure, self.ax = plt.subplots()
         self.canvas = FigureCanvas(self.figure)
         self.layout.addWidget(self.canvas)
-        self.table_view.setStyleSheet("""
-            QTableView {
-                gridline-color: #ddd;
-                selection-background-color: #5e0000;
-                selection-color: white;
-            }
-            QHeaderView::section {
-                background-color: #5e0000;
-                color: white;
-                padding: 5px;
-                border: 1px solid #ddd;
-            }
-        """)
         self.central_widget.setLayout(self.layout)
         self.button_layout.setSpacing(10)
         self.button_layout.setContentsMargins(10, 10, 10, 10)
@@ -227,7 +189,7 @@ class App(QMainWindow):
             for bar in bars:
                 width = bar.get_width()
                 self.ax.text(width + 1e7, bar.get_y() + bar.get_height()/2, f'${width/1e9:.1f}B', va='center', color='black')
-
+            
             self.ax.set_title('15 Highest Grossing Movies', color='black')
             self.ax.set_xlabel('Gross Revenue (Billions)', color='black')
             self.ax.set_ylabel('Movie Name', color='black')
@@ -244,7 +206,7 @@ class App(QMainWindow):
             data_top_10 = data[data['company'].isin(top_10_companies)]
             # sort the data by mean gross revenue in descending order
             data_top_10_sorted = data_top_10.groupby('company')['gross'].mean().reset_index().sort_values(by='gross', ascending=False)
-
+    
             company = data_top_10_sorted['company']
             gross = data_top_10_sorted['gross']
             wrap_company = [textwrap.fill(name, width=20) for name in company]  # Adjust width as needed
@@ -252,7 +214,7 @@ class App(QMainWindow):
             for bar in bars:
                  width = bar.get_width()
                  self.ax.text(width + 1e7, bar.get_y() + bar.get_height()/2, f'${width/1e9:.1f}B', va='center', color='black')
-
+    
             self.ax.set_title('Top 10 Production Companies by Revenue', color='black')
             self.ax.set_ylabel('Production Company', color='black')
             self.ax.set_xlabel('Total Revenue(in Billions)', color='black')
@@ -311,7 +273,7 @@ class App(QMainWindow):
             self.ax.set_title('Avg Ratings by Country', color = 'black')
             self.ax.set_xlabel('Country', color = 'black')
             self.ax.set_ylabel('Ratings', color = 'black')
-
+            
         else:
             self.missing_columns()
         self.canvas.draw()
