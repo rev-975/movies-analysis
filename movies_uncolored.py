@@ -12,9 +12,9 @@ data = pd.read_csv('~/movies_analysis/movies.csv')
 data.drop_duplicates(inplace=True)
 data.dropna(inplace=True)
 
+data.drop(['votes', 'released', 'writer'], axis=1, inplace=True)
 #list of colors
 colors = ['lightcoral', 'indianred','maroon', 'red', 'saddlebrown', 'peru', 'darkorange', 'tan','gold','plum','tomato','forestgreen','darkgreen','green','lime','seagreen','mediumspringgreen','mediumaquamarine','turquoise', 'darkslategrey','teal','dodgerblue','deepskyblue','cornflowerblue','navy','indigo','blue','mediumslateblue','darkviolet','fuchsia','deeppink','magenta','crimson']
-data.drop(['votes', 'released', 'writer'], axis=1, inplace=True)
 
 #model for displaying df
 class PandasModel(QAbstractTableModel):
@@ -181,7 +181,7 @@ class App(QMainWindow):
     def name_vs_gross(self):
         self.ax.clear()
         if 'gross' in data.columns:
-            highest_grossing_movies = data.sort_values(by='gross', ascending=False).head(15)
+            highest_grossing_movies = data.sort_values(by='gross', ascending=False).head(10)
             names = highest_grossing_movies['name']
             wrap_names = [textwrap.fill(name, width=20) for name in names]  # Adjust width as needed
             gross = highest_grossing_movies['gross']
@@ -190,7 +190,7 @@ class App(QMainWindow):
                 width = bar.get_width()
                 self.ax.text(width + 1e7, bar.get_y() + bar.get_height()/2, f'${width/1e9:.1f}B', va='center', color='black')
             
-            self.ax.set_title('15 Highest Grossing Movies', color='black')
+            self.ax.set_title('10 Highest Grossing Movies', color='black')
             self.ax.set_xlabel('Gross Revenue (Billions)', color='black')
             self.ax.set_ylabel('Movie Name', color='black')
         else:

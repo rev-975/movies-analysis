@@ -1,20 +1,21 @@
-import textwrap
+import textwrap # used to format long strings of text (like movie titles) into multiple lines for better readability.
 import sys
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd # library for data manipulation and analysis, which allows for easy handling of data
+import matplotlib.pyplot as plt # plotting library that is used to create static, animated, and interactive visualizations
+import numpy as np # unused, mostly just there in case i need to use it
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QTableView, QHBoxLayout, QLineEdit, QLabel, QHeaderView
 from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex
-import random
+import random # used to randomly select colors for the plots
 
+# loading and cleaning up data
 data = pd.read_csv('~/movies_analysis/movies.csv')
-data.drop_duplicates(inplace=True)
-data.dropna(inplace=True)
+data.drop_duplicates(inplace=True) # removes any duplicate rows
+data.dropna(inplace=True) # removes rows with missing values
+data.drop(['votes', 'released', 'writer'], axis=1, inplace=True)
 
 #list of colors
 colors = ['lightcoral', 'indianred','maroon', 'red', 'saddlebrown', 'peru', 'darkorange', 'tan','gold','plum','tomato','forestgreen','darkgreen','green','lime','seagreen','mediumspringgreen','mediumaquamarine','turquoise', 'darkslategrey','teal','dodgerblue','deepskyblue','cornflowerblue','navy','indigo','blue','mediumslateblue','darkviolet','fuchsia','deeppink','magenta','crimson']
-data.drop(['votes', 'released', 'writer'], axis=1, inplace=True)
 
 #model for displaying df
 class PandasModel(QAbstractTableModel):
@@ -30,11 +31,13 @@ class PandasModel(QAbstractTableModel):
         return len(self._data.columns)
 
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        # retrieving data
         if role == Qt.ItemDataRole.DisplayRole:
             return str(self._data.iloc[index.row(), index.column()])
         return None
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        # returns headerlabels for columns and rows
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Horizontal:
                 return self._data.columns[section]
@@ -62,7 +65,7 @@ class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Movies Analysis")
-        #self.setGeometry(150, 150, 1200, 800)
+        self.setGeometry(150, 150, 1200, 800)
         # Set the stylesheet
         self.setStyleSheet("""
             QMainWindow {
@@ -87,22 +90,20 @@ class App(QMainWindow):
             }
         """)
 
-
-
         # creating a central widget and layout
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
+        self.central_widget = QWidget()     # creates a central widget that will hold other widgets.
+        self.setCentralWidget(self.central_widget)      # sets the central widget of the QMainWindow, where all other widgets will be placed.
         self.layout = QVBoxLayout(self.central_widget)
 
         # creating a horizontal layout for buttons
-        self.button_layout = QHBoxLayout()
-        self.layout.addLayout(self.button_layout)
+        self.button_layout = QHBoxLayout()      # creates a horizontal layout for organizing buttons side by side.
+        self.layout.addLayout(self.button_layout)     # adds the horizontal layout for buttons to the main vertical layout. 
 
         # defining button actions
+        # maps button labels to their corresponding methods
         button_actions = {
             "View DataFrame": self.view_dataframe,
             "Name vs Gross Revenue": self.name_vs_gross,
-#            "Rating Plot": lambda: self.show_plot('rating'),
             "Companies vs Revenue": self.company_vs_revenue,
             "Genre vs Freq": self.genre_vs_freq,
             "Budget and Revenue": self.budget_revenue,
@@ -120,8 +121,8 @@ class App(QMainWindow):
         # creating buttons and adding to layout
         for text, action in button_actions.items():
             button = QPushButton(text)
-            button.clicked.connect(action)
-            self.button_layout.addWidget(button)
+            button.clicked.connect(action)   # connects the button’s clicked signal to the corresponding method
+            self.button_layout.addWidget(button)    #adds the button to the horizontal layout.
 
         # creating a placeholder for DataFrame and plotting
         self.table_view = QTableView()
@@ -129,10 +130,10 @@ class App(QMainWindow):
         self.table_view.setMaximumHeight(500)  # can set maximum height to make it smaller- hopefully
 
         # creating search boxes for each column
-        self.search_layout = QHBoxLayout()
-        self.layout.addLayout(self.search_layout)
+        self.search_layout = QHBoxLayout()    # creates a horizontal layout for search boxes.
+        self.layout.addLayout(self.search_layout)    # adds the search layout to the main layout.
 
-        self.search_boxes = []
+        self.search_boxes = [] # to hold the search box widgets.
         self.model = None
 
         # create a matplotlib figure and canvas
@@ -221,7 +222,7 @@ class App(QMainWindow):
         if 'gross' in data.columns:
             highest_grossing_movies = data.sort_values(by='gross', ascending=False).head(15)
             names = highest_grossing_movies['name']
-            wrap_names = [textwrap.fill(name, width=20) for name in names]  # Adjust width as needed
+            wrap_names = [textwrap.fill(name, width=20) for name in names]  # can adjust width as needed
             gross = highest_grossing_movies['gross']
             bars = self.ax.barh(wrap_names, gross, color=random.choice(colors))
             for bar in bars:
@@ -240,7 +241,7 @@ class App(QMainWindow):
         if 'company' in data.columns and 'gross' in data.columns:
             # get the top 15 production companies based on mean gross revenue
             top_10_companies = data.groupby('company')['gross'].mean().nlargest(10).index
-            # filtering the data to include only the top 15 companies
+            # filtering the data to include only the top 10 companies
             data_top_10 = data[data['company'].isin(top_10_companies)]
             # sort the data by mean gross revenue in descending order
             data_top_10_sorted = data_top_10.groupby('company')['gross'].mean().reset_index().sort_values(by='gross', ascending=False)
@@ -415,7 +416,7 @@ class App(QMainWindow):
         self.canvas.draw()
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    app = QApplication(sys.argv) # allows command-line arguments to be passed
     window = App()
     window.show()
     sys.exit(app.exec_())
