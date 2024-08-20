@@ -4,8 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QTableView, QHBoxLayout, QLineEdit, QLabel, QHeaderView
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QTableView, QHBoxLayout, QLineEdit, QLabel, QHeaderView, QSizePolicy, QSplitter
 from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex
+from PyQt5.QtGui import QFont
 import random
 
 data = pd.read_csv('~/movies_analysis/movies.csv')
@@ -62,6 +63,7 @@ class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Movies Analysis")
+#        self.setFont(QFont("DejaVu Sans Mono", 10))
         #self.setGeometry(150, 150, 1200, 800)
 
 # creating a central widget and layout
@@ -91,12 +93,17 @@ class App(QMainWindow):
             "Preferred Genres": self.preferred_genres,
             "Rating Popularity": self.rating_popularity,
         }
-
-        # creating buttons and adding to layout
+                # creating buttons and adding to layout
         for text, action in button_actions.items():
-            button = QPushButton(text)
+            wrap_text = textwrap.fill(text, width=20)  # Adjust width as needed
+            button = QPushButton(wrap_text)
             button.clicked.connect(action)
             self.button_layout.addWidget(button)
+
+        self.splitter = QSplitter(Qt.Vertical)
+        self.layout.addWidget(self.splitter)
+        self.data_frame_widget = QWidget()
+        self.data_frame_layout = QVBoxLayout(self.data_frame_widget)
 
         # creating a placeholder for DataFrame and plotting
         self.table_view = QTableView()
@@ -106,7 +113,9 @@ class App(QMainWindow):
         # creating search boxes for each column
         self.search_layout = QHBoxLayout()
         self.layout.addLayout(self.search_layout)
-
+        self.splitter.addWidget(self.data_frame_widget)
+        self.plot_widget = QWidget()
+        self.plot_layout = QVBoxLayout(self.plot_widget)
         self.search_boxes = []
         self.model = None
 
@@ -118,6 +127,9 @@ class App(QMainWindow):
         self.button_layout.setSpacing(10)
         self.button_layout.setContentsMargins(10, 10, 10, 10)
         self.layout.setContentsMargins(10, 10, 10, 10)
+
+        self.plot_layout.addWidget(self.canvas)
+        self.splitter.addWidget(self.plot_widget)
         # initially show the DataFrame
         self.view_dataframe()
 
@@ -148,8 +160,11 @@ class App(QMainWindow):
             self.search_layout.addWidget(search_box)
 
         header.setSectionResizeMode(QHeaderView.Stretch)  # stretch columns to fit the table width
+        self.table_view.verticalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.table_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        header.setSectionResizeMode(QHeaderView.Stretch)
 
-        # update the header
+# update the header
         self.table_view.update()
         self.table_view.viewport().update()
         self.table_view.horizontalHeader().update()
@@ -200,7 +215,7 @@ class App(QMainWindow):
     def company_vs_revenue(self):
         self.ax.clear()
         if 'company' in data.columns and 'gross' in data.columns:
-            # get the top 15 production companies based on mean gross revenue
+            # get the top 10 production companies based on mean gross revenue
             top_10_companies = data.groupby('company')['gross'].mean().nlargest(10).index
             # filtering the data to include only the top 15 companies
             data_top_10 = data[data['company'].isin(top_10_companies)]

@@ -1,23 +1,23 @@
-import textwrap # used to format long strings of text (like movie titles) into multiple lines for better readability.
+import textwrap
 import sys
-import pandas as pd # library for data manipulation and analysis, which allows for easy handling of data
-import matplotlib.pyplot as plt # plotting library that is used to create static, animated, and interactive visualizations
-import numpy as np # unused, mostly just there in case i need to use it
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QTableView, QHBoxLayout, QLineEdit, QLabel, QHeaderView
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QTableView, QHBoxLayout, QLineEdit, QLabel, QHeaderView, QStackedWidget
 from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex
-import random # used to randomly select colors for the plots
+from PyQt5.QtGui import QFont
+import random
 
-# loading and cleaning up data
 data = pd.read_csv('~/movies_analysis/movies.csv')
-data.drop_duplicates(inplace=True) # removes any duplicate rows
-data.dropna(inplace=True) # removes rows with missing values
-data.drop(['votes', 'released', 'writer'], axis=1, inplace=True)
+data.drop_duplicates(inplace=True)
+data.dropna(inplace=True)
 
-#list of colors
+data.drop(['votes', 'released', 'writer'], axis=1, inplace=True)
+# List of colors
 colors = ['lightcoral', 'indianred','maroon', 'red', 'saddlebrown', 'peru', 'darkorange', 'tan','gold','plum','tomato','forestgreen','darkgreen','green','lime','seagreen','mediumspringgreen','mediumaquamarine','turquoise', 'darkslategrey','teal','dodgerblue','deepskyblue','cornflowerblue','navy','indigo','blue','mediumslateblue','darkviolet','fuchsia','deeppink','magenta','crimson']
 
-#model for displaying df
+# Model for displaying DataFrame
 class PandasModel(QAbstractTableModel):
     def __init__(self, data_frame=pd.DataFrame()):
         super().__init__()
@@ -31,13 +31,11 @@ class PandasModel(QAbstractTableModel):
         return len(self._data.columns)
 
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-        # retrieving data
         if role == Qt.ItemDataRole.DisplayRole:
             return str(self._data.iloc[index.row(), index.column()])
         return None
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
-        # returns headerlabels for columns and rows
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Horizontal:
                 return self._data.columns[section]
@@ -60,49 +58,22 @@ class PandasModel(QAbstractTableModel):
             self._data = self._original_data
         self.layoutChanged.emit()
 
-# main application
+# Main application
 class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Movies Analysis")
-        self.setGeometry(150, 150, 1200, 800)
-        # Set the stylesheet
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #f0f0f0;
-            }
-            QPushButton {
-                background-color: #5e0000;
-                color: white;
-                border-radius: 5px;
-                padding: 10px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #b30000;
-            }
-            QTableView {
-                border: 1px solid #ddd;
-                background-color: white;
-            }
-            QLabel {
-                font-weight: bold;
-            }
-        """)
-
-        # creating a central widget and layout
-        self.central_widget = QWidget()     # creates a central widget that will hold other widgets.
-        self.setCentralWidget(self.central_widget)      # sets the central widget of the QMainWindow, where all other widgets will be placed.
-        self.layout = QVBoxLayout(self.central_widget)
-
-        # creating a horizontal layout for buttons
-        self.button_layout = QHBoxLayout()      # creates a horizontal layout for organizing buttons side by side.
-        self.layout.addLayout(self.button_layout)     # adds the horizontal layout for buttons to the main vertical layout. 
-
-        # defining button actions
-        # maps button labels to their corresponding methods
+        
+        # Create central widget and layout
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        
+        self.main_layout = QVBoxLayout(self.central_widget)
+        self.button_layout = QHBoxLayout()
+        
+        # Define button actions
         button_actions = {
-            "View DataFrame": self.view_dataframe,
+            "View DataFrame": self.dataframe,
             "Name vs Gross Revenue": self.name_vs_gross,
             "Companies vs Revenue": self.company_vs_revenue,
             "Genre vs Freq": self.genre_vs_freq,
@@ -118,67 +89,55 @@ class App(QMainWindow):
             "Rating Popularity": self.rating_popularity,
         }
 
-        # creating buttons and adding to layout
+        # Create buttons and add to layout
         for text, action in button_actions.items():
-            wrap_text = textwrap.fill(text, width=20)  # Adjust width as needed
-            button = QPushButton(wrap_text)
-            button.clicked.connect(action)   # connects the button’s clicked signal to the corresponding method
-            self.button_layout.addWidget(button)    #adds the button to the horizontal layout.
+            button = QPushButton(text)
+            button.setFixedWidth(150)  # Adjust button width as needed
+            button.setStyleSheet("text-align: left;")  # Ensure text aligns correctly
+            button.clicked.connect(action)
+            self.button_layout.addWidget(button)
 
-        # creating a placeholder for DataFrame and plotting
+        # Create stacked widget for switching views
+        self.stacked_widget = QStackedWidget()
+        self.main_layout.addLayout(self.button_layout)
+        self.main_layout.addWidget(self.stacked_widget)
+
+        # Create the DataFrame view
+        self.data_view = QWidget()
+        self.data_layout = QVBoxLayout(self.data_view)
         self.table_view = QTableView()
-        self.layout.addWidget(self.table_view)
-        self.table_view.setMaximumHeight(500)  # can set maximum height to make it smaller- hopefully
+        self.data_layout.addWidget(self.table_view)
+        self.stacked_widget.addWidget(self.data_view)
 
-        # creating search boxes for each column
-        self.search_layout = QHBoxLayout()    # creates a horizontal layout for search boxes.
-        self.layout.addLayout(self.search_layout)    # adds the search layout to the main layout.
+        # Create the plot view
+        self.plot_view = QWidget()
+        self.plot_layout = QVBoxLayout(self.plot_view)
+        self.canvas = FigureCanvas(plt.figure())
+        self.plot_layout.addWidget(self.canvas)
+        self.stacked_widget.addWidget(self.plot_view)
 
-        self.search_boxes = [] # to hold the search box widgets.
-        self.model = None
+        # Show initial DataFrame view
+        self.dataframe()
 
-        # create a matplotlib figure and canvas
-        self.figure, self.ax = plt.subplots()
-        self.canvas = FigureCanvas(self.figure)
-        self.layout.addWidget(self.canvas)
-        self.table_view.setStyleSheet("""
-            QTableView {
-                gridline-color: #ddd;
-                selection-background-color: #5e0000;
-                selection-color: white;
-            }
-            QHeaderView::section {
-                background-color: #5e0000;
-                color: white;
-                padding: 5px;
-                border: 1px solid #ddd;
-            }
-        """)
-        self.central_widget.setLayout(self.layout)
-        self.button_layout.setSpacing(10)
-        self.button_layout.setContentsMargins(10, 10, 10, 10)
-        self.layout.setContentsMargins(10, 10, 10, 10)
-        # initially show the DataFrame
-        self.view_dataframe()
-
-    def view_dataframe(self):
-        # clear previous plot- leads to unknown bugs otherwise
-        self.ax.clear()
-        self.canvas.draw()
-
-        # show DataFrame
+    def dataframe(self):
+        # Show DataFrame in stacked widget
+        self.stacked_widget.setCurrentWidget(self.data_view)
+        # Initialize DataFrame view
         self.model = PandasModel(data)
         self.table_view.setModel(self.model)
 
-        # sorting
+        # Sorting
         header = self.table_view.horizontalHeader()
         header.setSortIndicatorShown(True)
         header.sortIndicatorChanged.connect(self.handle_column_click)
 
-        # clear previous search boxes
+        # Clear previous search boxes
         self.clear_search_boxes()
 
-        # adding search boxes
+        # Adding search boxes
+        self.search_layout = QHBoxLayout()
+        self.data_layout.addLayout(self.search_layout)
+        self.search_boxes = []
         for i in range(self.model.columnCount()):
             search_box = QLineEdit()
             search_box.setPlaceholderText(f"Search {self.model.headerData(i, Qt.Horizontal, Qt.ItemDataRole.DisplayRole)}")
@@ -187,80 +146,76 @@ class App(QMainWindow):
             self.search_layout.addWidget(QLabel(self.model.headerData(i, Qt.Horizontal, Qt.ItemDataRole.DisplayRole)))
             self.search_layout.addWidget(search_box)
 
-        header.setSectionResizeMode(QHeaderView.Stretch)  # stretch columns to fit the table width
-
-        # update the header
-        self.table_view.update()
-        self.table_view.viewport().update()
-        self.table_view.horizontalHeader().update()
+        header.setSectionResizeMode(QHeaderView.Stretch)  # Stretch columns to fit the table width
 
     def clear_search_boxes(self):
-        # remove existing search boxes and labels
-        for box in self.search_boxes:
-            box.deleteLater()
-        self.search_boxes.clear()
-
-        # clear layout items
-        while self.search_layout.count():
-            item = self.search_layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+        # Remove existing search boxes and labels
+        if hasattr(self, 'search_boxes'):
+            for box in self.search_boxes:
+                box.deleteLater()
+            self.search_boxes.clear()
+        if hasattr(self, 'search_layout'):
+            while self.search_layout.count():
+                item = self.search_layout.takeAt(0)
+                widget = item.widget()
+                if widget:
+                    widget.deleteLater()
 
     def handle_column_click(self, index, order):
-        # sort model based on the clicked column
+        # Sort model based on the clicked column
         self.model.sort(index, order)
 
     def handle_search(self, text, column):
-        # apply filter based on the search box
+        # Apply filter based on the search box
         self.model.filter(column, text)
 
     def missing_columns(self):
         self.ax.text(0.5, 0.5, 'Missing required columns. Sorry.', horizontalalignment='center', verticalalignment='center', color='black')
 
-    def name_vs_gross(self):
-        self.ax.clear()
-        if 'gross' in data.columns:
-            highest_grossing_movies = data.sort_values(by='gross', ascending=False).head(15)
-            names = highest_grossing_movies['name']
-            wrap_names = [textwrap.fill(name, width=30) for name in names]  # can adjust width as needed
-            gross = highest_grossing_movies['gross']
-            bars = self.ax.barh(wrap_names, gross, color=random.choice(colors))
-            for bar in bars:
-                width = bar.get_width()
-                self.ax.text(width + 1e7, bar.get_y() + bar.get_height()/2, f'${width/1e9:.1f}B', va='center', color='black')
-
-            self.ax.set_title('15 Highest Grossing Movies', color='black')
-            self.ax.set_xlabel('Gross Revenue (Billions)', color='black')
-            self.ax.set_ylabel('Movie Name', color='black')
-        else:
-            self.missing_columns()
+    def display_plot(self, plot_func):
+        # Show plot in stacked widget
+        self.stacked_widget.setCurrentWidget(self.plot_view)
+        plot_func()
         self.canvas.draw()
+
+    def name_vs_gross(self):
+        def plot_func():
+            self.ax = self.canvas.figure.add_subplot(111)
+            self.ax.clear()
+            if 'gross' in data.columns:
+                highest_grossing_movies = data.sort_values(by='gross', ascending=False).head(10)
+                names = highest_grossing_movies['name']
+                wrap_names = [textwrap.fill(name, width=20) for name in names]  # Adjust width as needed
+                gross = highest_grossing_movies['gross']
+                bars = self.ax.barh(wrap_names, gross, color=random.choice(colors))
+                for bar in bars:
+                    width = bar.get_width()
+                    self.ax.text(width + 1e7, bar.get_y() + bar.get_height()/2, f'${width/1e9:.1f}B', va='center', color='black')
+                
+                self.ax.set_title('10 Highest Grossing Movies', color='black')
+                self.ax.set_xlabel('Gross Revenue (Billions)', color='black')
+                self.ax.set_ylabel('Movie Name', color='black')
+            else:
+                self.missing_columns()
+        self.display_plot(plot_func)
 
     def company_vs_revenue(self):
-        self.ax.clear()
-        if 'company' in data.columns and 'gross' in data.columns:
-            # get the top 15 production companies based on mean gross revenue
-            top_10_companies = data.groupby('company')['gross'].mean().nlargest(10).index
-            # filtering the data to include only the top 10 companies
-            data_top_10 = data[data['company'].isin(top_10_companies)]
-            # sort the data by mean gross revenue in descending order
-            data_top_10_sorted = data_top_10.groupby('company')['gross'].mean().reset_index().sort_values(by='gross', ascending=False)
-
-            company = data_top_10_sorted['company']
-            gross = data_top_10_sorted['gross']
-            wrap_company = [textwrap.fill(name, width=30) for name in company]  # Adjust width as needed
-            bars = self.ax.barh(wrap_company, gross, color=random.choice(colors))
-            for bar in bars:
-                 width = bar.get_width()
-                 self.ax.text(width + 1e7, bar.get_y() + bar.get_height()/2, f'${width/1e9:.1f}B', va='center', color='black')
-
-            self.ax.set_title('Top 10 Production Companies by Revenue', color='black')
-            self.ax.set_ylabel('Production Company', color='black')
-            self.ax.set_xlabel('Total Revenue(in Billions)', color='black')
-        else:
-            self.missing_columns()
-        self.canvas.draw()
+        def plot_func():
+            self.ax = self.canvas.figure.add_subplot(111)
+            self.ax.clear()
+            if 'company' in data.columns and 'gross' in data.columns:
+                top_10_companies = data.groupby('company')['gross'].sum().nlargest(10)
+                bars = self.ax.barh(top_10_companies.index, top_10_companies.values, color=random.choice(colors))
+                for bar in bars:
+                    width = bar.get_width()
+                    self.ax.text(width + 1e7, bar.get_y() + bar.get_height()/2, f'${width/1e9:.1f}B', va='center', color='black')
+                
+                self.ax.set_title('Top 10 Companies by Revenue', color='black')
+                self.ax.set_xlabel('Gross Revenue (Billions)', color='black')
+                self.ax.set_ylabel('Company', color='black')
+            else:
+                self.missing_columns()
+        self.display_plot(plot_func)
 
     def genre_vs_freq(self):
         self.ax.clear()
@@ -313,7 +268,7 @@ class App(QMainWindow):
             self.ax.set_title('Avg Ratings by Country', color = 'black')
             self.ax.set_xlabel('Country', color = 'black')
             self.ax.set_ylabel('Ratings', color = 'black')
-
+            
         else:
             self.missing_columns()
         self.canvas.draw()
@@ -416,11 +371,14 @@ class App(QMainWindow):
             self.missing_columns()
         self.canvas.draw()
 
+
+    # Define other plot functions similarly
+    # e.g. genre_vs_freq, budget_revenue, etc.
+
 if __name__ == "__main__":
-    app = QApplication(sys.argv) # allows command-line arguments to be passed
+    app = QApplication(sys.argv)
     window = App()
     window.show()
     sys.exit(app.exec_())
-
 
 
