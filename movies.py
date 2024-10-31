@@ -116,7 +116,7 @@ class App(QMainWindow):
         # creating a placeholder for DataFrame and plotting
         self.table_view = QTableView()
         self.layout.addWidget(self.table_view)
-        self.table_view.setMaximumHeight(500)  # can set maximum height to make it smaller- hopefully
+        self.table_view.setMaximumHeight(500)  # can set maximum height to make it smaller
 
         # creating search boxes for each column
         self.search_layout = QHBoxLayout()    # creates a horizontal layout for search boxes.
@@ -150,7 +150,7 @@ class App(QMainWindow):
         self.view_dataframe()
 
     def view_dataframe(self):
-        # clear previous plot- leads to unknown bugs otherwise
+        # clear previous plot
         self.ax.clear()
         self.canvas.draw()
 
@@ -296,7 +296,8 @@ class App(QMainWindow):
         self.ax.clear()
         if 'country' in data.columns and 'score' in data.columns:
             avg_rating_by_country = data.groupby('country')['score'].mean().sort_values(ascending=False).head(20)
-            self.ax.barh(avg_rating_by_country.index, avg_rating_by_country.values,  color=random.choice(colors))
+            wrap_country = [textwrap.fill(name, width=20) for name in avg_rating_by_country.index]  # Adjust width as needed
+            self.ax.barh(wrap_country, avg_rating_by_country.values,  color=random.choice(colors))
             for index, value in enumerate(avg_rating_by_country.values):
                 self.ax.text(value + 0.01, index, f'{value:.2f}', va='center')
             self.ax.set_title('Avg Ratings by Country', color = 'black')
@@ -313,7 +314,8 @@ class App(QMainWindow):
         self.ax.clear()
         if 'director' in data.columns and 'score' in data.columns:
             directors = data.groupby('director')['score'].mean().nlargest(25)
-            bars = self.ax.barh(directors.index, directors.values,  color=random.choice(colors))
+            wrap_directors = [textwrap.fill(name, width=20) for name in directors.index]  # Adjust width as needed
+            bars = self.ax.barh(wrap_directors, directors.values,  color=random.choice(colors))
             for bar in bars:
                 height = bar.get_height()
                 width = bar.get_width()
