@@ -109,7 +109,8 @@ class App(QMainWindow):
 
         # creating buttons and adding to layout
         for text, action in button_actions.items():
-            button = QPushButton(text)
+            textw = textwrap.fill(text, width=15)   # can adjust width as needed
+            button = QPushButton(textw)
             button.clicked.connect(action)   # connects the button’s clicked signal to the corresponding method
             self.button_layout.addWidget(button)    #adds the button to the horizontal layout.
 
@@ -212,13 +213,13 @@ class App(QMainWindow):
         if 'gross' in data.columns:
             highest_grossing_movies = data.sort_values(by='gross', ascending=False).head(15)
             names = highest_grossing_movies['name']
-            wrap_names = [textwrap.fill(name, width=20) for name in names]  # can adjust width as needed
+            #wrap_names = [textwrap.fill(name, width=20) for name in names]  # can adjust width as needed
             gross = highest_grossing_movies['gross']
-            bars = self.ax.barh(wrap_names, gross, color=random.choice(colors))
+            bars = self.ax.barh(names, gross, color=random.choice(colors))
             for bar in bars:
                 width = bar.get_width()
                 self.ax.text(width + 1e7, bar.get_y() + bar.get_height()/2, f'${width/1e9:.1f}B', va='center', color='black')
-
+            self.figure.subplots_adjust(left=0.3)  # increase left margin
             self.ax.set_title('15 Highest Grossing Movies', color='black')
             self.ax.set_xlabel('Gross Revenue (Billions)', color='black')
             self.ax.set_ylabel('Movie Name', color='black')
@@ -239,11 +240,12 @@ class App(QMainWindow):
             company = data_top_10_sorted['company']
             gross = data_top_10_sorted['gross']
             wrap_company = [textwrap.fill(name, width=20) for name in company]  # Adjust width as needed
-            bars = self.ax.barh(wrap_company, gross, color=random.choice(colors))
+            bars = self.ax.barh(company, gross, color=random.choice(colors))
             for bar in bars:
                  width = bar.get_width()
                  self.ax.text(width + 1e7, bar.get_y() + bar.get_height()/2, f'${width/1e9:.1f}B', va='center', color='black')
-
+            
+            self.figure.subplots_adjust(left=0.3)  # increase left margin
             self.ax.set_title('Top 10 Production Companies by Revenue', color='black')
             self.ax.set_ylabel('Production Company', color='black')
             self.ax.set_xlabel('Total Revenue(in Billions)', color='black')
@@ -279,17 +281,31 @@ class App(QMainWindow):
     def country_vs_revenue(self):
         self.ax.clear()
         if 'country' in data.columns and 'gross' in data.columns:
-            # similar to top companies vs revenue
-            # we use median because data wrt country might be skewed
-            top_10_countries = data.groupby('country')['gross'].median().nlargest(10).index
-            data_top_10_countries = data[data['country'].isin(top_10_countries)].sort_values(ascending=False, by='gross')
-            self.ax.bar(data_top_10_countries.country, data_top_10_countries.gross, color=random.choice(colors))
-            self.ax.set_title('Median Gross Revenue by Country (Top 10 Countries)')
-            self.ax.set_xlabel('Country', color = 'black')
-            self.ax.set_ylabel('Median Gross Revenue (in Billions)', color = 'black')
+            # compute median gross per country once
+            median_gross = data.groupby('country')['gross'].median()
+            
+            # select top 10 countries by median gross
+            top_10_countries = median_gross.nlargest(10)
+            
+            # create bar plot
+            bars = self.ax.bar(top_10_countries.index, top_10_countries.values, color=random.choice(colors))
+            
+            # optional: add text labels on top of bars
+            for bar in bars:
+                height = bar.get_height()
+                self.ax.text(bar.get_x() + bar.get_width()/2, height + 1e6, f'${height/1e9:.1f}B', ha='center', va='bottom')
+            
+            self.ax.set_title('Median Gross Revenue by Country (Top 10)', color='black')
+            self.ax.set_xlabel('Country', color='black')
+            self.ax.set_ylabel('Median Gross Revenue (in Billions)', color='black')
+            
+            # make layout tight to avoid label overlap
+            self.figure.tight_layout()
         else:
-             self.missing_columns()
+            self.missing_columns()
+        
         self.canvas.draw()
+    
 
 
     def country_vs_score(self):
@@ -297,10 +313,11 @@ class App(QMainWindow):
         if 'country' in data.columns and 'score' in data.columns:
             avg_rating_by_country = data.groupby('country')['score'].mean().sort_values(ascending=False).head(20)
             wrap_country = [textwrap.fill(name, width=20) for name in avg_rating_by_country.index]  # Adjust width as needed
-            self.ax.barh(wrap_country, avg_rating_by_country.values,  color=random.choice(colors))
+            self.ax.barh(avg_rating_by_country.index, avg_rating_by_country.values,  color=random.choice(colors))
             for index, value in enumerate(avg_rating_by_country.values):
                 self.ax.text(value + 0.01, index, f'{value:.2f}', va='center')
             self.ax.set_title('Avg Ratings by Country', color = 'black')
+            self.figure.subplots_adjust(left=0.3)  # increase left margin
             self.ax.set_xlabel('Country', color = 'black')
             self.ax.set_ylabel('Ratings', color = 'black')
 
