@@ -1,93 +1,86 @@
-# Movies Analysis App
+# Movies Analysis Dashboard (PyQt5 + Matplotlib)
 
-A **PyQt5 desktop application** for analyzing movie datasets with interactive plots and a searchable DataFrame.  
-
-This app allows you to visualize various aspects of movies, such as revenue, genres, directors, budgets, and runtime distributions.  
-
----
+This project is an interactive data analysis dashboard for movies, built with PyQt5 for the GUI, Matplotlib for visualizations, and Pandas for data handling. It allows users to explore a movies dataset through tables, filtering, sorting, and various plots (e.g., revenue trends, genre popularity, director performance).
 
 ## Features
 
-- View the full DataFrame with sortable columns and search filters.  
-- Horizontal bar plots for:
-  - Highest grossing movies  
-  - Top production companies by revenue  
-  - Directors by score and gross  
-  - Revenue and score by country  
-- Distribution plots for budget and runtime.  
-- Visualizations for preferred genres and rating popularity.  
-- Interactive buttons for easy navigation between views.
+- Data Table with Filtering & Sorting
+  - View the dataset in a table.
+  - Sort by any column.
 
----
+- Interactive Visualizations
+  - Highest grossing movies
+  - Top production companies by revenue
+  - Genre popularity
+  - Gross revenue by genre
+  - Revenue by country
+  - Scores by country
+  - Directors by score and revenue
+  - Budget distribution
+  - Runtime distribution
+  - Budget vs revenue trends over years
+  - Rating distribution
 
-## Requirements
+- Custom Styling
 
-- Python 3.8+  
-- PyQt5  
-- pandas  
-- matplotlib  
-- numpy  
+## Tech Stack
 
-## Setup Instructions
-
-1. Clone or download this repository.
-2. Ensure Python 3.8+ is installed.
-3. Install required packages using pip:
-
-```bash
-pip install PyQt5 pandas matplotlib numpy
-```
-
-or using pacman or yay on Arch distributions 
-
-```bash
-sudo pacman -S python python-pyqt5 python-pandas python-matplotlib python-numpy
-```
-
-4. Run the file movies.py
-
----
+- Python 3
+- PyQt5 – GUI framework
+- Matplotlib – Data visualization
+- Pandas – Data manipulation
+- NumPy – Numerical operations
 
 ## Dataset
 
-The application uses a CSV file named `movies.csv` with at least the following columns:
-
-```
-name, year, genre, company, director, country, gross, budget, runtime, score, rating
-```
-
-Optional columns like `votes`, `released`, `writer`, `star` will be ignored.  
-
-**Dataset location:**  
-
-Save the CSV at:
-
+The app expects a CSV file containing movies data at:  
 ```
 ~/movies_analysis/movies.csv
 ```
 
-or update the path in the code:
+The dataset should include at least the following columns:
+- `name` – Movie name  
+- `company` – Production company  
+- `genre` – Movie genre  
+- `country` – Country of release  
+- `director` – Movie director  
+- `budget` – Budget in USD  
+- `gross` – Gross revenue in USD  
+- `runtime` – Runtime in minutes  
+- `score` – Rating score  
+- `rating` – Audience rating (e.g., PG-13, R)  
+- `year` – Release year  
 
-```python
-data = pd.read_csv('~/movies_analysis/movies.csv')
-```
+Unused or unnecessary columns (`votes`, `released`, `writer`, `star`) are dropped automatically.
 
-You can use your own movie dataset as long as it contains the required columns.
+## How to Run
 
----
+1. Clone or download this repository.  
 
-## Usage
+2. Install dependencies:
+   ```bash
+   pip install pandas matplotlib pyqt5
+   ```
 
-- Launch the app to see the **DataFrame view** by default.  
-- Use the **search boxes** above each column to filter results.  
-- Click **buttons** to switch between visualizations:  
-  - Horizontal bar plots for revenue, directors, genres, and countries.  
-  - Distribution plots for budget and runtime.  
-  - Plots for preferred genres and rating popularity.  
+3. Place your `movies.csv` file in:
+   ```
+   ~/movies_analysis/movies.csv
+   ```
+   You can use your own movie dataset as long as it contains the required columns.
+   just change the filename in the python file.
 
----
+4. Run the application:
+   ```bash
+   python3 movies_final.py
+   ```
 
-## Notes
+## Future Improvements
 
-- only the top N items are plotted for plots like “Top Directors” or “Revenue by Country” (otherwise it takes a bit of time)  
+- Export filtered data to CSV/Excel.  
+- Add more interactive plots (scatter plots, correlation heatmaps).  
+- Improve performance with large datasets.  
+- Switch to PySide6 for Qt6 compatibility.  
 
+## License
+
+This project is open-source. Use and modify freely for personal or academic purposes.  
