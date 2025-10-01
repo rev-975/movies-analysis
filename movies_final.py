@@ -75,19 +75,9 @@ class PandasModel(QAbstractTableModel):
              print(f"Filtering column '{column_name}' with '{filter_text}'")  
                
              column_data = filtered_data[column_name]
-               
-             if pd.api.types.is_numeric_dtype(column_data):
-                 try:
-                     numeric_value = float(filter_text)
-                     mask = column_data == numeric_value
-                 except ValueError:
-                     mask = column_data.astype(str).str.contains(
-                         filter_text, case=False, na=False, regex=False
-                     )
-             else:
-                 mask = column_data.astype(str).str.contains(
-                     filter_text, case=False, na=False, regex=False
-                 )
+             mask = column_data.astype(str).str.contains(
+             filter_text, case=False, na=False, regex=False
+            )
                
              filtered_data = filtered_data[mask]
              print(f"After filtering '{column_name}': {len(filtered_data)} rows remaining")  
