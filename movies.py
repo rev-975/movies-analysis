@@ -9,7 +9,11 @@ import random # used to randomly select colors for the plots
 import textwrap # used to format long strings of text (like movie titles) into multiple lines for better readability.
 
 # loading and cleaning up data
-data = pd.read_csv('~/movies_analysis/movies.csv')
+try:
+    data = pd.read_csv('~/movies_analysis/movies.csv')
+except FileNotFoundError:
+    # Handle the error, maybe show a dialog to select a file
+    print("File not found")
 data.drop_duplicates(inplace=True) # removes any duplicate rows
 data.dropna(inplace=True) # removes rows with missing values
 data.drop(['votes', 'released', 'writer', 'star'], axis=1, inplace=True) # removing unused attributes
